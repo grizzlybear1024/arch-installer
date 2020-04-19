@@ -28,6 +28,19 @@ mkswap /dev/sd$drive$swap_part
 
 clear
 
+echo
+
+echo '======================\n'
+echo '  INTERNET SETUP\n'
+echo '======================\n'
+
+read -p 'WiFi or Ethernet? (w/e)' wifi_eth
+
+if [ "$wifi_eth" == "w" ]; then
+	wifi-menu
+fi
+clear
+
 echo '======================\n'
 echo '  PACKAGE INSTALL\n'
 echo '======================\n'
@@ -79,6 +92,20 @@ echo '======================\n'
 echo '  NETWORK SETUP\n'
 echo '======================\n'
 
+echo 'Starting and enabling Network Manager...'
+
+systemctl start NetworkManager
+systemctl enable NetworkManager
+
+if [ "$wifi_eth" == "w" ]; then
+	nmcli r wifi on
+	echo '\nLog into wifi with NetworkManager'
+	echo 'Choose your network'
+	nmcli d wifi list
+	read -p 'SSID: ' ssid
+	read -p -s 'Wifi Password: ' wifi_pass
+	nmcli d wifi connect $ssid password $wifi_pass
+fi
 
 read -p 'Computer Name: ' pc_name
 arch-chroot /mnt echo $pc_name >> /etc/hostname
