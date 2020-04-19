@@ -94,17 +94,17 @@ echo '======================\n'
 
 echo 'Starting and enabling Network Manager...'
 
-systemctl start NetworkManager
-systemctl enable NetworkManager
+arch-chroot /mnt systemctl start NetworkManager
+arch-chroot /mnt systemctl enable NetworkManager
 
 if [ "$wifi_eth" == "w" ]; then
-	nmcli r wifi on
+	arch-chroot /mnt nmcli r wifi on
 	echo '\nLog into wifi with NetworkManager'
 	echo 'Choose your network'
-	nmcli d wifi list
+	arch-chroot /mnt nmcli d wifi list
 	read -p 'SSID: ' ssid
 	read -p -s 'Wifi Password: ' wifi_pass
-	nmcli d wifi connect $ssid password $wifi_pass
+	arch-chroot /mnt nmcli d wifi connect $ssid password $wifi_pass
 fi
 
 read -p 'Computer Name: ' pc_name
@@ -130,7 +130,6 @@ fi
 arch-chroot /mnt mkdir /efi
 arch-chroot /mnt mount /dev/sd$drive$efi_part /efi
 
-arch-chroot /mnt systemctl enable NetworkManager
 arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB
 arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
 
