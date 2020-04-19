@@ -3,6 +3,10 @@
 timedatectl set-ntp true
 clear
 
+echo '======================\n'
+echo '  DISK SETUP\n'
+echo '======================\n'
+
 echo Choose the drive you would like to install arch on:
 fdisk -l | grep 'Disk /'
 read -p 'Drive: ' drive
@@ -23,6 +27,11 @@ mkfs.ext4 /dev/sd$drive$main_part
 mkswap /dev/sd$drive$swap_part
 
 clear
+
+echo '======================\n'
+echo '  PACKAGE INSTALL\n'
+echo '======================\n'
+
 
 mount /dev/sd$drive$main_part /mnt
 
@@ -46,6 +55,11 @@ fi
 
 clear
 
+echo '======================\n'
+echo '  TIME / LOCALES\n'
+echo '======================\n'
+
+
 echo 'Set system time zone'
 arch-chroot /mnt ls /usr/share/zoneinfo/
 read -p 'Region: ' install_region
@@ -60,11 +74,24 @@ arch-chroot /mnt locale-gen
 arch-chroot /mnt echo 'LANG=en_US.UTF-8' >> /etc/locale.conf
 
 clear
+
+echo '======================\n'
+echo '  NETWORK SETUP\n'
+echo '======================\n'
+
+
 read -p 'Computer Name: ' pc_name
 arch-chroot /mnt echo $pc_name >> /etc/hostname
 arch-chroot /mnt echo '127.0.0.1	'$pc_name >> /etc/hosts
 arch-chroot /mnt echo '::1		'$pc_name >> /etc/hosts
 arch-chroot /mnt echo '127.0.1.1	'$pc_name'.localdomain	'$pc_name >> /etc/hosts
+
+clear
+
+echo '======================\n'
+echo '  GRUB SETUP\n'
+echo '======================\n'
+
 
 read -p 'Would you like to edit GRUB before making config? (y/n) ' grub_edit_confirm
 
@@ -72,7 +99,6 @@ if [ "$grub_edit_confirm" == "y" ]; then
 	arch-chroot /mnt nano /etc/default/grub
 fi
 
-echo
 
 arch-chroot /mnt mkdir /efi
 arch-chroot /mnt mount /dev/sd$drive$efi_part /efi
@@ -80,6 +106,11 @@ arch-chroot /mnt mount /dev/sd$drive$efi_part /efi
 arch-chroot /mnt systemctl enable NetworkManager
 arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB
 arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
+
+echo '======================\n'
+echo '  USER / PERMS SETUP\n'
+echo '======================'
+
 
 echo 'Password for root user: '
 arch-chroot /mnt passwd
@@ -95,6 +126,13 @@ if [ "$sudo_edit_confirm" == "y" ]; then
         arch-chroot /mnt EDITOR=nano visudo
 fi
 
-arch-chroot /mnt 
+clear
 
-echo 'done!'
+read -p 'Installation and setup has completed. Would you like to reboot or chroot into your system: (r/c) ' reboot_or_chroot
+
+if [ "$reboot_or_chroot" == "c" ]; then
+	echo 'Type \'exit\' to reboot the system'
+        arch-chroot /mnt
+fi
+
+reboot
