@@ -39,6 +39,12 @@ read -p 'WiFi or Ethernet? (w/e)' wifi_eth
 if [ "$wifi_eth" == "w" ]; then
 	wifi-menu
 fi
+
+read -p "Test ping archlinux.org? (y/n) " test_ping
+if [ "$test_ping" == "y" ]; then
+        ping archlinux.org -c 4
+fi
+
 clear
 
 echo '======================\n'
@@ -105,6 +111,10 @@ if [ "$wifi_eth" == "w" ]; then
 	read -p 'SSID: ' ssid
 	read -p -s 'Wifi Password: ' wifi_pass
 	arch-chroot /mnt nmcli d wifi connect $ssid password $wifi_pass
+	read -p "Test ping archlinux.org? (y/n) " test_ping
+	if [ "$test_ping" == "y" ]; then
+        	ping archlinux.org -c 4
+	fi
 fi
 
 read -p 'Computer Name: ' pc_name
