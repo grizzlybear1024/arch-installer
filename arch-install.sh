@@ -112,7 +112,7 @@ echo '======================'
 
 mount /dev/sd$drive$main_part /mnt
 
-pacstrap /mnt base base-devel linux linux-firmware efibootmgr grub nano git dhcpcd dhclient networkmanager man-db man-pages texinfo bash sudo openssh parted wget
+pacstrap /mnt base base-devel linux linux-firmware efibootmgr grub nano git dhcpcd dhclient networkmanager man-db man-pages texinfo bash sudo openssh parted reflector ntfs-3g os-prober wget
 
 genfstab -U /mnt >> /mnt/etc/fstab
 
@@ -168,6 +168,39 @@ echo '127.0.0.1	'$pc_name >> /mnt/etc/hosts
 echo '::1		'$pc_name >> /mnt/etc/hosts
 echo '127.0.1.1	'$pc_name'.localdomain	'$pc_name >> /mnt/etc/hosts
 
+echo 'Would you like to auto-rank mirrors for improved pacman download speeds? This may take a while (y/n) ' mirrors_confirm
+
+if [ "$mirrors_confirm" == "y" ]; then
+    arch-chroot /mnt cp /etc/pacman.d/mirrorlist /etc/pacman.d/backup-mirrorlist
+    arch-chroot /mnt reflector --sort rate --save /etc/pacman.d/mirrorlist
+fi
+
+echo 'Would you like to edit /etc/pacman.conf to enable 32 bit support? (y/n) ' pacman_conf_confirm
+
+if [ "$pacman_conf_confirm" == "y" ]; then
+    arch-chroot /mnt nano /etc/pacman.conf
+fi
+
+echo 'Would you like to install an AUR helper (yay) (y/n) ' yay_confirm
+
+if [ "$yay_confirm" == "y" ]; then
+    arch-chroot /mnt git clone https://aur.archlinux.org/yay.git
+    arch-chroot /mnt cd yay & makepkg -si
+    arch-chroot /mnt cd ..
+fi
+
+echo 'Are you running on an Intel or AMD Processor? (enter b for both if installing on USB drive) (i/a/b) ' ucode
+
+if [ "$ucode" == "i" ]; then
+    arch-chroot /mnt pacman -S intel-ucode --noconfirm
+else if [ "$ucode" == "a" ]; then
+    arch-chroot /mnt pacman -S amd-ucode --noconfirm
+else 
+    arch-chroot /mnt pacman -S intel-ucode amd-ucode --noconfirm
+fi
+
+arch-chroot /mnt pacman -Syu --noconfirm
+
 clear
 
 echo '======================'
@@ -181,6 +214,13 @@ if [ "$grub_edit_confirm" == "y" ]; then
 	arch-chroot /mnt nano /etc/default/grub
 	clear
 fi
+
+read -p 'Do you have other operating systems installed on your computer? (y/n) ' other_os
+
+if [ "$other_os" == "y" ]; then
+	arch-chroot /mnt os-prober
+fi
+
 if [ "$efi" -eq "1" ]; then
     arch-chroot /mnt mkdir /efi
     arch-chroot /mnt mount /dev/sd$efi_drive$efi_part /efi
@@ -191,6 +231,7 @@ else
     grub-install --target=i386-pc /dev/sd$drive
     arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
 fi
+clear
 
 echo '======================'
 echo '  USER / PERMS SETUP'
@@ -211,7 +252,7 @@ clear
 read -p 'Installation and setup has completed. Would you like to reboot or chroot into your system: (r/c) ' reboot_or_chroot
 
 if [ "$reboot_or_chroot" == "c" ]; then
-	echo 'Type \'exit\' to reboot the system'
+	echo 'Type exit to reboot the system'
         arch-chroot /mnt
 fi
 
