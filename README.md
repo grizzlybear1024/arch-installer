@@ -3,7 +3,7 @@ Lightweight Arch Install Script
 
 Alot of this code is untested, so run at your own risk.
 
-This is how to run it (Assuming you have an internet connection established on the machine):
+This is how to run it (assuming you have an internet connection established on the machine):
 ```
 git clone https://github.com/grizzlybear1024/arch-installer.git
 cd arch-installer
