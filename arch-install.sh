@@ -1,6 +1,8 @@
 #!/bin/bash
 
+
 timedatectl set-ntp true
+drive_letter=s
 efi_vars=/sys/firmware/efi/efivars
 total_mem=$(cat /proc/meminfo | grep MemTotal: | cut -d " " -f 8)
 if find "efi_vars" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then #IF SYSTEM IS UEFI
@@ -18,16 +20,16 @@ echo ''
 echo 'Choose the drive you would like to install arch on:'
 echo ''
 fdisk -l
-read -p 'Drive (enter the lowercase letter after /dev/sd, for example a for /dev/sda: ' drive
+read -p 'Drive (enter the lowercase letter after /dev/${drive_letter}d, for example a for /dev/${drive_letter}da: ' drive
 
 read -p 'Would you like to automatically set up the partitions (WARNING: THIS WILL WIPE ALL DATA FROM THE DRIVE) (y/n)' auto_drive_setup
 
 if [ "$auto_drive_setup" == "y" ]; then
-    read -p 'ARE YOU SURE YOU WANT TO WIPE ALL DATA FROM /dev/sd'$drive'? (y/n) ' wipe_confirm
+    read -p 'ARE YOU SURE YOU WANT TO WIPE ALL DATA FROM /dev/${drive_letter}d'$drive'? (y/n) ' wipe_confirm
     
     if [ "$wipe_confirm" == "y" ]; then
         if [ "$efi" -eq "1" ]; then #IF SYSTEM IS UEFI
-            sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/sd$drive
+            sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/${drive_letter}d$drive
     g # clear the in memory partition table
     n # new partition
     p # primary partition
@@ -51,7 +53,7 @@ EOF
             main_part = 2
             swap_part = 3
         else #IF SYSTEM IS NOT UEFI
-            sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/sd$drive
+            sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/${drive_letter}d$drive
     o # clear the in memory partition table
     n # new partition
     p # primary partition
@@ -75,10 +77,10 @@ else
 
         if [ "$drive_edit_confirm" == "y" ]; then
                 clear
-                fdisk /dev/sd$drive
+                fdisk /dev/${drive_letter}d$drive
         fi
         echo Choose the partitions you want arch to install on:
-        fdisk -l /dev/sd$drive
+        fdisk -l /dev/${drive_letter}d$drive
 
         read -p 'Main Partition: ' main_part
         read -p 'Swap Partition: ' swap_part
@@ -99,7 +101,7 @@ else
 
         if [ "$drive_edit_confirm" == "y" ]; then
                 clear
-                fdisk /dev/sd$drive
+                fdisk /dev/${drive_letter}d$drive
         fi
     fi
 fi
@@ -110,7 +112,7 @@ echo '  PACKAGE INSTALL'
 echo '======================'
 
 
-mount /dev/sd$drive$main_part /mnt
+mount /dev/${drive_letter}d$drive$main_part /mnt
 
 pacstrap /mnt base base-devel linux linux-firmware efibootmgr grub nano git dhcpcd dhclient networkmanager man-db man-pages texinfo bash sudo openssh parted reflector ntfs-3g os-prober wget
 
@@ -123,10 +125,10 @@ if [ "$review_fstab" == "y" ]; then
         clear
 	read -p 'Is the swap partition missing from the fs table? (y/n) ' add_swap
 	if [ "$add_swap" == "y" ]; then
-		fdisk -l /dev/sd$drive
+		fdisk -l /dev/${drive_letter}d$drive
 		read -p 'Enter the swap partition: ' swap_part
 		echo '' >> /mnt/fstab
-		swap_drive_uuid=$(blkid -s UUID -o value /dev/sd$drive$swap_part)
+		swap_drive_uuid=$(blkid -s UUID -o value /dev/${drive_letter}d$drive$swap_part)
 		printf "%s" "UUID=" "$swap_drive_uuid"  " none" " swap" " defaults" " 0" " 0" >> /mnt/etc/fstab
 	fi
 fi
@@ -223,12 +225,12 @@ fi
 
 if [ "$efi" -eq "1" ]; then
     arch-chroot /mnt mkdir /efi
-    arch-chroot /mnt mount /dev/sd$efi_drive$efi_part /efi
+    arch-chroot /mnt mount /dev/${drive_letter}d$efi_drive$efi_part /efi
 
     arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB
     arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
 else
-    grub-install --target=i386-pc /dev/sd$drive
+    grub-install --target=i386-pc /dev/${drive_letter}d$drive
     arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
 fi
 clear
