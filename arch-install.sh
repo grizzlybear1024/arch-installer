@@ -35,7 +35,7 @@ if [ "$auto_drive_setup" == "y" ]; then
     read -p 'ARE YOU SURE YOU WANT TO WIPE ALL DATA FROM /dev/'${drive_letter}'d'$drive'? (y/n) ' wipe_confirm
     
     if [ "$wipe_confirm" == "y" ]; then
-        if [ "$efi" -eq "1" ]; then #IF SYSTEM IS UEFI
+        if [ "$efi" -eq 1 ]; then #IF SYSTEM IS UEFI
             sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/${drive_letter}d$drive
     g # clear the in memory partition table
     n # new partition
@@ -79,7 +79,7 @@ EOF
         fi
     fi
 else
-    if [ "$efi" -eq "1" ]; then #IF SYSTEM IS UEFI
+    if [ "$efi" -eq 1 ]; then #IF SYSTEM IS UEFI
         read -p 'Would you like to manually edit the partition table of the drive? (y/n) ' drive_edit_confirm
 
         if [ "$drive_edit_confirm" == "y" ]; then
@@ -230,7 +230,7 @@ if [ "$other_os" == "y" ]; then
 	arch-chroot /mnt os-prober
 fi
 
-if [ "$efi" -eq "1" ]; then
+if [ "$efi" -eq 1 ]; then
     arch-chroot /mnt mkdir /efi
     arch-chroot /mnt mount /dev/${drive_letter}d$efi_drive$efi_part /efi
 
