@@ -11,7 +11,7 @@ if find "$efi_vars" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then #IF S
 else
     if_efi=0
 fi
-clear
+#clear
 
 echo '======================'
 echo '  DISK SETUP'
@@ -36,9 +36,9 @@ if [ "$auto_drive_setup" == "y" ]; then
     read -p 'ARE YOU SURE YOU WANT TO WIPE ALL DATA FROM /dev/'${drive_letter}'d'$drive'? (y/n) ' wipe_confirm
     
     if [ "$wipe_confirm" == "y" ]; then
-        if [ "$efi" -eq 1 ]; then #IF SYSTEM IS UEFI
+        if [ "$if_efi" -eq 1 ]; then #IF SYSTEM IS UEFI
             sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/${drive_letter}d$drive
-    g # clear the in memory partition table
+    g # #clear the in memory partition table
     n # new partition
     p # primary partition
     1 # partition number 1
@@ -56,10 +56,10 @@ if [ "$auto_drive_setup" == "y" ]; then
     # end of drive
     w # write the partition table
 EOF
-            efi_drive = $drive
-            efi_part = 1
-            main_part = 2
-            swap_part = 3
+            efi_drive=$drive
+            efi_part=1
+            main_part=2
+            swap_part=3
         else #IF SYSTEM IS NOT UEFI
             sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/${drive_letter}d$drive
     o # clear the in memory partition table
@@ -75,45 +75,48 @@ EOF
     # end of drive
     w # write the partition table and save to disk
 EOF
-        main_part = 1
-        swap_part = 2
+        main_part=1
+        swap_part=2
         fi
     fi
 else
-    if [ "$efi" -eq 1 ]; then #IF SYSTEM IS UEFI
-        read -p 'Would you like to manually edit the partition table of the drive? (y/n) ' drive_edit_confirm
+    read -p 'Would you like to manually edit the partition table of the drive? (y/n) ' drive_edit_confirm
+    if [ "$drive_edit_confirm" == "y" ]; then
+        fdisk /dev/${drive_letter}d$drive
+        if [ "$if_efi" -eq 1 ]; then #IF SYSTEM IS UEFI
+                echo Choose the partitions you want arch to install on:
+                fdisk -l /dev/${drive_letter}d$drive
 
-        if [ "$drive_edit_confirm" == "y" ]; then
-                clear
-                fdisk /dev/${drive_letter}d$drive
+                read -p 'Main Partition: ' main_part
+                read -p 'Swap Partition: ' swap_part
+
+                read -p 'Do you want the EFI Partition on another drive? (y/n) ' efi_another_drive
+                if [ "$efi_another_drive" == "y" ]; then
+                    fdisk -l
+                    read -p "EFI Drive: " efi_drive
+                    read -p "Do you want to edit the EFI Drive? (y/n) " edit_efi_drive
+                    if ["$edit_efi_drive" == "y"]; then
+                        fdisk /dev/${drive_letter}d${efi_drive}
+                    fi
+                else
+                    efi_drive=$drive
+                fi
+
+                read -p 'EFI Partition: ' efi_part
+                mkfs.fat -F32 /dev/${drive_letter}d${drive}$efi_part
         fi
+    else #IF SYSTEM IS NOT UEFI
+        #clear
+        fdisk /dev/${drive_letter}d$drive
         echo Choose the partitions you want arch to install on:
         fdisk -l /dev/${drive_letter}d$drive
 
         read -p 'Main Partition: ' main_part
         read -p 'Swap Partition: ' swap_part
-
-        read -p 'Is the EFI Partition on another drive? (y/n)' efi_another_drive
-
-        if [ "$efi_another_drive" == "y" ]; then
-            fdisk -l
-            read -p "EFI Drive: " efi_drive
-        else
-            efi_drive=$drive
-        fi
-
-        read -p 'EFI Partition: ' efi_part
-    else #IF SYSTEM IS NOT UEFI
-        efi = 0
-        read -p 'Would you like to manually edit the partition table of the drive? (y/n) ' drive_edit_confirm
-
-        if [ "$drive_edit_confirm" == "y" ]; then
-                clear
-                fdisk /dev/${drive_letter}d$drive
-        fi
     fi
+    mkfs.ext4 /dev/${drive_letter}d${drive}${main_part}
 fi
-clear
+#clear
 
 echo '======================'
 echo '  PACKAGE INSTALL'
@@ -130,7 +133,7 @@ read -p 'Would you like to review the file system table? (y/n) ' review_fstab
 
 if [ "$review_fstab" == "y" ]; then
         nano /mnt/etc/fstab
-        clear
+        #clear
 	read -p 'Is the swap partition missing from the fs table? (y/n) ' add_swap
 	if [ "$add_swap" == "y" ]; then
 		fdisk -l /dev/${drive_letter}d$drive
@@ -141,7 +144,7 @@ if [ "$review_fstab" == "y" ]; then
 	fi
 fi
 
-clear
+#clear
 
 echo '======================'
 echo '  TIME / LOCALES'
@@ -161,7 +164,7 @@ echo 'en_US.UTF-8 UTF-8' >> /mnt/etc/locale.gen
 arch-chroot /mnt locale-gen
 echo 'LANG=en_US.UTF-8' >> /mnt/etc/locale.conf
 
-clear
+#clear
 
 echo '======================'
 echo '  NETWORK SETUP'
@@ -199,7 +202,7 @@ if [ "$yay_confirm" == "y" ]; then
     arch-chroot /mnt cd ..
 fi
 
-echo 'Are you running on an Intel or AMD Processor? (enter b for both if installing on USB drive) (i/a/b) ' ucode
+echo 'Are you running on an Intel or AMD Processor? (enter b for both if installing on USB drive or unsure) (i/a/b) ' ucode
 
 if [ "$ucode" == "i" ]; then
     arch-chroot /mnt pacman -S intel-ucode --noconfirm
@@ -211,7 +214,7 @@ fi
 
 arch-chroot /mnt pacman -Syu --noconfirm
 
-clear
+#clear
 
 echo '======================'
 echo '  GRUB SETUP'
@@ -221,8 +224,8 @@ echo '======================'
 read -p 'Would you like to edit GRUB before making config? (y/n) ' grub_edit_confirm
 
 if [ "$grub_edit_confirm" == "y" ]; then
-	arch-chroot /mnt nano /etc/default/grub
-	clear
+    arch-chroot /mnt nano /etc/default/grub
+    #clear
 fi
 
 read -p 'Do you have other operating systems installed on your computer? (y/n) ' other_os
@@ -231,9 +234,9 @@ if [ "$other_os" == "y" ]; then
 	arch-chroot /mnt os-prober
 fi
 
-if [ "$efi" -eq 1 ]; then
+if [ "$if_efi" -eq 1 ]; then
     arch-chroot /mnt mkdir /efi
-    arch-chroot /mnt mount /dev/${drive_letter}d$efi_drive$efi_part /efi
+    arch-chroot /mnt mount /dev/${drive_letter}d${efi_drive}${efi_part} /efi
 
     arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB
     arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
@@ -241,7 +244,7 @@ else
     grub-install --target=i386-pc /dev/${drive_letter}d$drive
     arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
 fi
-clear
+#clear
 
 echo '======================'
 echo '  USER / PERMS SETUP'
@@ -257,7 +260,7 @@ echo 'Password:'
 arch-chroot /mnt passwd $user__name
 
 echo '%wheel ALL=(ALL) ALL' >> /mnt/etc/sudoers
-clear
+#clear
 
 read -p 'Installation and setup has completed. Would you like to reboot or chroot into your system: (r/c) ' reboot_or_chroot
 
