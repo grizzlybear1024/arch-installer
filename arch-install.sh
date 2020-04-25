@@ -20,12 +20,12 @@ echo ''
 echo 'Choose the drive you would like to install arch on:'
 echo ''
 fdisk -l
-read -p 'Drive (enter the lowercase letter after /dev/${drive_letter}d, for example a for /dev/${drive_letter}da: ' drive
+read -p 'Drive (enter the lowercase letter after /dev/'${drive_letter}'d, for example a for /dev/'${drive_letter}'da: ' drive
 
 read -p 'Would you like to automatically set up the partitions (WARNING: THIS WILL WIPE ALL DATA FROM THE DRIVE) (y/n)' auto_drive_setup
 
 if [ "$auto_drive_setup" == "y" ]; then
-    read -p 'ARE YOU SURE YOU WANT TO WIPE ALL DATA FROM /dev/${drive_letter}d'$drive'? (y/n) ' wipe_confirm
+    read -p 'ARE YOU SURE YOU WANT TO WIPE ALL DATA FROM /dev/'${drive_letter}'d'$drive'? (y/n) ' wipe_confirm
     
     if [ "$wipe_confirm" == "y" ]; then
         if [ "$efi" -eq "1" ]; then #IF SYSTEM IS UEFI
