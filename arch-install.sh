@@ -17,6 +17,13 @@ echo '  DISK SETUP'
 echo '======================'
 echo ''
 
+
+if [ "$efi" -eq "1" ]; then #IF SYSTEM IS UEFI
+    echo 'SYSTEM IS UEFI'
+else
+    echo 'SYSTEM IS NOT UEFI'
+fi
+
 echo 'Choose the drive you would like to install arch on:'
 echo ''
 fdisk -l
