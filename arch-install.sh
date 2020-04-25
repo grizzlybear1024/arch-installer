@@ -5,7 +5,8 @@ timedatectl set-ntp true
 drive_letter=s
 efi_vars=/sys/firmware/efi/efivars
 total_mem=$(cat /proc/meminfo | grep MemTotal: | cut -d " " -f 8)
-if find "efi_vars" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then #IF SYSTEM IS UEFI
+
+if find "$efi_vars" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then #IF SYSTEM IS UEFI
     if_efi=1
 else
     if_efi=0
